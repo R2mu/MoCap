@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Motion Analysis Suite</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --error-color: #dc2626;
+            --background-color: #f3f4f6;
+            --card-background: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --sidebar-width: 320px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Side Panel Styles */
+        .side-panel {
+            width: var(--sidebar-width);
+            background-color: var(--card-background);
+            border-right: 1px solid #e5e7eb;
+            height: 100%;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .app-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .app-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .app-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .card {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        /* Video Container Styles */
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #videoElement, #canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        #canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        /* Playback Controls */
+        .playback-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+
+        .timeline {
+            flex: 1;
+            height: 4px;
+            background-color: #e5e7eb;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        /* Charts Container */
+        .charts-container {
+            margin-top: 1.5rem;
+        }
+
+        #upperBodyChart {
+            width: 100%;
+            height: 300px;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Side Panel -->
+        <aside class="side-panel">
+            <div class="app-header">
+                <h1 class="app-title">Motion Analysis Suite</h1>
+                <p class="app-subtitle">Configuration & Controls</p>
+            </div>
+
+            <!-- Session Configuration -->
+            <div class="card">
+                <h2 class="card-title">Session Configuration</h2>
+                <div class="form-group">
+                    <label class="form-label" for="clientName">Client Name</label>
+                    <input type="text" id="clientName" class="form-input" placeholder="Enter client name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="testingOccasion">Testing Occasion</label>
+                    <input type="text" id="testingOccasion" class="form-input" placeholder="Enter testing occasion">
+                </div>
+            </div>
+
+            <!-- Calibration Controls -->
+            <div class="card">
+                <h2 class="card-title">Calibration</h2>
+                <button id="startCalibration" class="btn btn-primary">Start Calibration</button>
+                <div id="calibrationInput" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" for="knownDistance">Known Distance</label>
+                        <input type="number" id="knownDistance" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="unitType">Unit</label>
+                        <select id="unitType" class="form-input">
+                            <option value="cm">Centimeters</option>
+                            <option value="m">Meters</option>
+                            <option value="in">Inches</option>
+                        </select>
+                    </div>
+                    <button id="confirmCalibration" class="btn btn-primary">Confirm</button>
+                    <button id="cancelCalibration" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Event Tagging -->
+            <div class="card">
+                <h2 class="card-title">Event Tagging</h2>
+                <div class="form-group">
+                    <label class="form-label" for="newTagInput">New Tag</label>
+                    <input type="text" id="newTagInput" class="form-input" placeholder="Enter new tag name">
+                    <select id="shortcutSelect" class="form-input">
+                        <option value="w">W key</option>
+                        <option value="a">A key</option>
+                        <option value="s">S key</option>
+                        <option value="d">D key</option>
+                    </select>
+                </div>
+                <button onclick="addNewTag()" class="btn btn-primary">Add Tag</button>
+                <div id="tagButtons" class="tag-buttons"></div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Video Analysis -->
+            <div class="card">
+                <h2 class="card-title">Video Analysis</h2>
+                <div class="form-group">
+                    <input type="file" id="videoInput" accept="video/*" class="form-input">
+                    <button id="processButton" class="btn btn-primary" disabled>Process Video</button>
+                </div>
+                <div id="status" class="status"></div>
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar"></div>
+                </div>
+            </div>
+
+            <!-- Video Container -->
+            <div class="video-container">
+                <video id="videoElement" controls></video>
+                <canvas id="canvas"></canvas>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="playback-controls">
+                <button id="playPauseButton" class="btn btn-secondary">Play</button>
+                <button id="previousFrameButton" class="btn btn-secondary">◀</button>
+                <button id="nextFrameButton" class="btn btn-secondary">▶</button>
+                <input type="range" id="videoProgress" class="timeline" min="0" max="100" value="0">
+                <span id="timeDisplay">0:00 / 0:00</span>
+            </div>
+
+            <!-- Analysis Charts -->
+            <div class="charts-container">
+                <div id="upperBodyChart"></div>
+            </div>
+
+            <button id="downloadCSV" class="btn btn-primary">Download Analysis Data (CSV)</button>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <script>
+        // Ensure TensorFlow.js uses the WebGL backend for better performance
+        tf.setBackend('webgl').then(() => {
+            console.log("TensorFlow.js backend set to WebGL");
+        });
+
+        let tags = [];
+        let eventMarkers = [];
+        
+        const tagShortcuts = {
+    'w': 'Tag1',
+    'a': 'Tag2',
+    's': 'Tag3',
+    'd': 'Tag4'
+};
+
+        // Function to add new tag
+        function addNewTag() {
+            const input = document.getElementById('newTagInput');
+            const tagName = input.value.trim();
+            
+            if (tagName && !tags.includes(tagName)) {
+                tags.push(tagName);
+                createTagButton(tagName);
+                input.value = '';
+            }
+        }
+
+        function createTagButton(tagName, shortcutKey) {
+    const button = document.createElement('button');
+    button.className = 'tag-button';
+    button.textContent = `${tagName} (${shortcutKey})`;
+    button.onclick = () => addEventMarker(tagName);
+    document.getElementById('tagButtons').appendChild(button);
+}
+
+document.addEventListener('keydown', (event) => {
+    // Handle arrow keys for frame navigation
+    if (event.key === 'ArrowRight') {
+        nextFrame();
+        return;
+    }
+    if (event.key === 'ArrowLeft') {
+        previousFrame();
+        return;
+    }
+
+    // Handle tag shortcuts
+    const tagName = tagShortcuts[event.key];
+    if (tagName) {
+        addEventMarker(tagName);
+    }
+});
+
+        function addEventMarker(tagName) {
+            const frameIndex = currentFrame;
+            eventMarkers.push({
+                frame: frameIndex,
+                tag: tagName,
+                timestamp: frameIndex / 30 // assuming 30fps
+            });
+            
+            // Update visualization
+            updateChartEventMarkers();
+        }
+
+        function addNewTag() {
+    const input = document.getElementById('newTagInput');
+    const tagName = input.value.trim();
+    const shortcutSelect = document.getElementById('shortcutSelect');
+    const shortcutKey = shortcutSelect.value;
+    
+    if (tagName && !Object.values(tagShortcuts).includes(tagName)) {
+        tagShortcuts[shortcutKey] = tagName;
+        createTagButton(tagName, shortcutKey);
+        input.value = '';
+    }
+}
+
+    </script>
+
+    <script>
+        let detector;
+        let video;
+        let canvas;
+        let ctx;
+        let frames = [];
+        let poses = [];
+        let angleData = [];
+        let isProcessing = false;
+        let isPlaying = false;
+        let currentFrame = 0;
+        let isCalibrating = false;
+        let calibrationPoints = [];
+        let pixelsPerUnit = null;
+           
+
+
+        // Initialize everything when the page loads
+document.addEventListener('DOMContentLoaded', async () => {
+    // Existing initialization
+    video = document.getElementById('videoElement');
+    canvas = document.getElementById('canvas');
+    ctx = canvas.getContext('2d', { willReadFrequently: true });
+    
+    // Add calibration initialization AFTER canvas is initialized
+    addCalibrationControls();
+    initializeCalibration();
+    
+    // Rest of your existing initialization
+    setupControls();
+    await initializeDetector();
+});
+
+
+function addCalibrationControls() {
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'calibration-controls';
+    controlsDiv.innerHTML = `
+        <button id="startCalibration">Start Calibration</button>
+        <div id="calibrationInput" style="display: none;">
+            <input type="number" id="knownDistance" placeholder="Enter known distance">
+            <select id="unitType">
+                <option value="cm">Centimeters</option>
+                <option value="m">Meters</option>
+                <option value="in">Inches</option>
+            </select>
+            <button id="confirmCalibration">Confirm</button>
+            <button id="cancelCalibration">Cancel</button>
+        </div>
+        <div id="calibrationStatus"></div>
+    `;
+    
+    // Insert after video controls
+    const videoContainer = document.querySelector('.video-container');
+    videoContainer.insertAdjacentElement('beforebegin', controlsDiv);
+}
+    
+const downloadButton = `
+<button id="downloadCSV" class="download-btn" style="
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 10px 0;
+">Download Angle Data (CSV)</button>
+`;
+
+const styles = `
+    .calibration-controls {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    .calibration-controls button {
+        margin-right: 10px;
+    }
+    
+    .calibration-controls input {
+        width: 100px;
+        margin-right: 10px;
+        padding: 5px;
+    }
+    
+    .calibration-controls select {
+        margin-right: 10px;
+        padding: 5px;
+    }
+    
+    .calibration-line {
+        position: absolute;
+        pointer-events: none;
+        z-index: 10;
+    }
+`;
+
+function initializeCalibration() {
+   // addCalibrationControls();
+    
+    const startCalibrationBtn = document.getElementById('startCalibration');
+    const calibrationInput = document.getElementById('calibrationInput');
+    const confirmCalibrationBtn = document.getElementById('confirmCalibration');
+    const cancelCalibrationBtn = document.getElementById('cancelCalibration');
+    const calibrationStatus = document.getElementById('calibrationStatus');
+
+    // Add canvas click handler
+    canvas.addEventListener('click', handleCalibrationClick);
+
+    startCalibrationBtn.addEventListener('click', () => {
+        isCalibrating = true;
+        calibrationPoints = [];
+        startCalibrationBtn.style.display = 'none';
+        calibrationInput.style.display = 'none';
+        calibrationStatus.textContent = 'Click two points on the video to calibrate';
+        
+        // Create temporary overlay for line drawing
+        const overlay = document.createElement('div');
+        overlay.id = 'calibrationOverlay';
+        overlay.style.position = 'absolute';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.pointerEvents = 'none';
+        document.querySelector('.video-container').appendChild(overlay);
+    });
+
+    confirmCalibrationBtn.addEventListener('click', () => {
+        const distance = parseFloat(document.getElementById('knownDistance').value);
+        const unit = document.getElementById('unitType').value;
+        
+        if (distance && calibrationPoints.length === 2) {
+            const pixelDistance = calculateDistance(
+                calibrationPoints[0].x, 
+                calibrationPoints[0].y, 
+                calibrationPoints[1].x, 
+                calibrationPoints[1].y
+            );
+            
+            pixelsPerUnit = pixelDistance / distance;
+            
+            calibrationStatus.textContent = `Calibration set: ${pixelsPerUnit.toFixed(2)} pixels per ${unit}`;
+            calibrationInput.style.display = 'none';
+            startCalibrationBtn.style.display = 'block';
+            startCalibrationBtn.textContent = 'Recalibrate';
+            
+            // Remove calibration line
+            const overlay = document.getElementById('calibrationOverlay');
+            if (overlay) overlay.remove();
+        }
+    });
+
+    cancelCalibrationBtn.addEventListener('click', () => {
+        resetCalibration();
+    });
+}
+
+function handleCalibrationClick(event) {
+    if (!isCalibrating) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    calibrationPoints.push({ x, y });
+
+    // Draw point
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+
+    if (calibrationPoints.length === 2) {
+        // Draw line between points
+        const overlay = document.getElementById('calibrationOverlay');
+        if (overlay) {
+            const line = document.createElement('div');
+            line.className = 'calibration-line';
+            line.style.position = 'absolute';
+            line.style.border = '2px dashed red';
+            line.style.width = `${calculateDistance(
+                calibrationPoints[0].x,
+                calibrationPoints[0].y,
+                calibrationPoints[1].x,
+                calibrationPoints[1].y
+            )}px`;
+            line.style.transformOrigin = '0 0';
+            line.style.transform = `rotate(${calculateAngle(
+                calibrationPoints[0].x,
+                calibrationPoints[0].y,
+                calibrationPoints[1].x,
+                calibrationPoints[1].y
+            )}rad)`;
+            line.style.left = `${calibrationPoints[0].x}px`;
+            line.style.top = `${calibrationPoints[0].y}px`;
+            overlay.appendChild(line);
+        }
+
+        isCalibrating = false;
+        document.getElementById('calibrationInput').style.display = 'block';
+    }
+}
+
+function calculateDistance(x1, y1, x2, y2) {
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+}
+
+function calculateAngle(x1, y1, x2, y2) {
+    return Math.atan2(y2 - y1, x2 - x1);
+}
+
+
+// Add button and initialize event listener
+document.addEventListener('DOMContentLoaded', () => {
+    // Add button to the page (adjust selector as needed)
+    document.querySelector('.video-container').insertAdjacentHTML('beforebegin', downloadButton);
+    
+    // Add click handler
+    document.getElementById('downloadCSV').addEventListener('click', downloadAngleData);
+});
+
+// Optional: Add hover effect styles
+const buttonStyle = document.createElement('style');
+buttonStyle.textContent = `
+    .download-btn:hover {
+        background-color: #0056b3;
+    }
+    .download-btn:active {
+        background-color: #004085;
+    }
+`;
+document.head.appendChild(buttonStyle);
+
+
+function downloadAngleData() {
+            const clientName = document.getElementById('clientName').value;
+            const testingOccasion = document.getElementById('testingOccasion').value;
+
+            // Create headers
+            const headers = ['Frame', 'Client', 'Testing_Occasion'];
+            const angleTypes = ['Right Elbow', 'Left Elbow', 'Right Knee', 'Left Knee', 'Right Hip', 'Left Hip'];
+            headers.push(...angleTypes, 'Event_Tag');
+            
+            const csvRows = [headers];
+            
+            // Process data
+            angleData.forEach((data, frame) => {
+                const row = [
+                    frame,
+                    clientName,
+                    testingOccasion
+                ];
+                
+                // Add angle data
+                angleTypes.forEach(type => {
+                    const key = type.replace(/\s+/g, '').charAt(0).toLowerCase() + type.replace(/\s+/g, '').slice(1);
+                    row.push(data[key] || '');
+                });
+                
+                // Add event tag if exists
+                const event = eventMarkers.find(e => e.frame === frame);
+                row.push(event ? event.tag : '');
+                
+                csvRows.push(row);
+            });
+
+            const csvContent = csvRows.map(row => row.join(',')).join('\n');
+            
+            // Create and trigger download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `pose_angles_${timestamp}.csv`;
+            
+            if (navigator.msSaveBlob) {
+                navigator.msSaveBlob(blob, fileName);
+            } else {
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+
+function resetCalibration() {
+    isCalibrating = false;
+    calibrationPoints = [];
+    const startCalibrationBtn = document.getElementById('startCalibration');
+    const calibrationInput = document.getElementById('calibrationInput');
+    const calibrationStatus = document.getElementById('calibrationStatus');
+    
+    startCalibrationBtn.style.display = 'block';
+    startCalibrationBtn.textContent = 'Start Calibration';
+    calibrationInput.style.display = 'none';
+    calibrationStatus.textContent = '';
+    
+    // Remove calibration overlay
+    const overlay = document.getElementById('calibrationOverlay');
+    if (overlay) overlay.remove();
+
+    // Clear calibration points from canvas
+    drawFrame(currentFrame);
+}
+
+
+async function initializeDetector() {
+            const status = document.getElementById('status');
+            try {
+                detector = await poseDetection.createDetector(
+                    poseDetection.SupportedModels.BlazePose,
+                    {
+                        runtime: 'tfjs',
+                        modelType: 'heavy',
+                        enableSmoothing: true,
+                        minPoseScore: 0.8,
+                        minTrackingConfidence: 0.7,
+                        minPosePresenceConfidence: 0.7,
+                        enableTracking: true
+                    }
+                );
+                status.textContent = 'Model loaded successfully';
+                status.className = 'status success';
+            } catch (error) {
+                status.textContent = 'Error loading model: ' + error.message;
+                status.className = 'status error';
+            }
+        }
+
+function setupControls() {
+            const videoInput = document.getElementById('videoInput');
+            const processButton = document.getElementById('processButton');
+            const playPauseButton = document.getElementById('playPauseButton');
+            const previousFrameButton = document.getElementById('previousFrameButton');
+            const nextFrameButton = document.getElementById('nextFrameButton');
+            const videoProgress = document.getElementById('videoProgress');
+
+            videoInput.addEventListener('change', handleVideoUpload);
+            processButton.addEventListener('click', processVideo);
+            playPauseButton.addEventListener('click', togglePlayPause);
+            previousFrameButton.addEventListener('click', previousFrame);
+            nextFrameButton.addEventListener('click', nextFrame);
+            videoProgress.addEventListener('input', seekVideo);
+
+            video.addEventListener('timeupdate', updateTimeDisplay);
+        }
+
+function handleVideoUpload(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const url = URL.createObjectURL(file);
+        video.src = url;
+        video.onloadedmetadata = () => {
+            // Set maximum dimensions
+            const MAX_WIDTH = 640;
+            const MAX_HEIGHT = 480;
+            
+            // Calculate new dimensions maintaining aspect ratio
+            const aspectRatio = video.videoWidth / video.videoHeight;
+            let newWidth = Math.min(MAX_WIDTH, video.videoWidth);
+            let newHeight = newWidth / aspectRatio;
+            
+            // Check if height exceeds maximum
+            if (newHeight > MAX_HEIGHT) {
+                newHeight = MAX_HEIGHT;
+                newWidth = newHeight * aspectRatio;
+            }
+            
+            // Set dimensions
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            video.width = newWidth;
+            video.height = newHeight;
+            
+            // Update container size if needed
+            const container = document.querySelector('.video-container');
+            container.style.width = `${newWidth}px`;
+            
+            document.getElementById('processButton').disabled = false;
+        };
+    }
+}
+        // Helper function to wait for frame to load
+function waitForFrame(video, timestamp) {
+            return new Promise((resolve) => {
+                video.onseeked = () => resolve();
+                video.currentTime = timestamp;
+            });
+        }
+
+async function processVideo() {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            const status = document.getElementById('status');
+            const processButton = document.getElementById('processButton');
+            const progressBar = document.getElementById('progressBar');
+            const playPauseButton = document.getElementById('playPauseButton');
+
+            status.textContent = 'Processing video...';
+            status.className = 'status processing';
+            processButton.disabled = true;
+            frames = [];
+            poses = [];
+            angleData = [];
+
+            const frameRate = 30;
+            const frameTime = 1 / frameRate;
+            const totalFrames = Math.floor(video.duration * frameRate);
+
+            for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+                const timestamp = frameIndex * frameTime;
+                
+                const progress = (frameIndex / totalFrames) * 100;
+                progressBar.style.width = `${progress}%`;
+                status.textContent = `Processing frame ${frameIndex + 1} of ${totalFrames}...`;
+
+                await waitForFrame(video, timestamp);
+
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                frames.push(imageData);
+
+                const pose = await detector.estimatePoses(imageData);
+                poses.push(pose);
+
+                // Calculate and store angle data
+                if (pose && pose.length > 0) {
+                    const frameAngles = calculateAllAngles(pose[0].keypoints);
+                    angleData.push(frameAngles);
+                } else {
+                    angleData.push(null);
+                }
+            }
+
+            status.textContent = `Processing complete! Captured ${frames.length} frames`;
+            status.className = 'status success';
+            progressBar.style.width = '100%';
+            playPauseButton.disabled = false;
+            isProcessing = false;
+
+            // Initialize charts with the processed data
+            initializeCharts();
+        }
+
+function calculateAllAngles(keypoints) {
+            return {
+                rightElbow: calculateAngle(
+                    keypoints[12], // Right Shoulder
+                    keypoints[14], // Right Elbow
+                    keypoints[16]  // Right Wrist
+                ),
+                leftElbow: calculateAngle(
+                    keypoints[11], // Left Shoulder
+                    keypoints[13], // Left Elbow
+                    keypoints[15]  // Left Wrist
+                ),
+                rightKnee: calculateAngle(
+                    keypoints[24], // Right Hip
+                    keypoints[26], // Right Knee
+                    keypoints[28]  // Right Ankle
+                ),
+                leftKnee: calculateAngle(
+                    keypoints[23], // Left Hip
+                    keypoints[25], // Left Knee
+                    keypoints[27]  // Left Ankle
+                ),
+                rightHip: calculateAngle(
+                    keypoints[12], // Right Shoulder
+                    keypoints[24], // Right Hip
+                    keypoints[26]  // Right Knee
+                ),
+                leftHip: calculateAngle(
+                    keypoints[11], // Left Shoulder
+                    keypoints[23], // Left Hip
+                    keypoints[25]  // Left Knee
+                )
+            };
+        }
+
+ function calculateAngle(p1, p2, p3) {
+            if (!p1 || !p2 || !p3 || p1.score < 0.3 || p2.score < 0.3 || p3.score < 0.3) {
+                return null;
+            }
+            
+            const vector1 = {
+                x: p1.x - p2.x,
+                y: p1.y - p2.y
+            };
+            const vector2 = {
+                x: p3.x - p2.x,
+                y: p3.y - p2.y
+            };
+
+            const dot = vector1.x * vector2.x + vector1.y * vector2.y;
+            const mag1 = Math.sqrt(vector1.x * vector1.x + vector1.y * vector1.y);
+            const mag2 = Math.sqrt(vector2.x * vector2.x + vector2.y * vector2.y);
+            const angleRad = Math.acos(dot / (mag1 * mag2));
+
+            return Math.round(angleRad * 180 / Math.PI);
+        }
+
+function initializeCharts() {
+            // Initialize Recharts for upper body angles
+            const upperBodyData = angleData.map((data, index) => ({
+                frame: index,
+                rightElbow: data?.rightElbow || null,
+                leftElbow: data?.leftElbow || null
+            }));
+
+            const lowerBodyData = angleData.map((data, index) => ({
+                frame: index,
+                rightKnee: data?.rightKnee || null,
+                leftKnee: data?.leftKnee || null,
+                rightHip: data?.rightHip || null,
+                leftHip: data?.leftHip || null
+            }));
+
+            // Create charts using Recharts
+            // Note: This is a placeholder. You'll need to implement the actual Recharts setup
+            console.log("Chart data prepared:", { upperBodyData, lowerBodyData });
+        }
+
+function togglePlayPause() {
+            if (isPlaying) {
+                pausePlayback();
+            } else {
+                startPlayback();
+            }
+            document.getElementById('playPauseButton').textContent = isPlaying ? 'Pause' : 'Play';
+        }
+
+function previousFrame() {
+            if (currentFrame > 0) {
+                currentFrame--;
+                drawFrame(currentFrame);
+            }
+        }
+
+function nextFrame() {
+            if (currentFrame < frames.length - 1) {
+                currentFrame++;
+                drawFrame(currentFrame);
+            }
+        }
+
+function seekVideo() {
+            const progress = document.getElementById('videoProgress').value;
+            currentFrame = Math.floor((progress / 100) * (frames.length - 1));
+            drawFrame(currentFrame);
+        }
+function updateTimeDisplay() {
+            const timeDisplay = document.getElementById('timeDisplay');
+            const currentTime = formatTime(video.currentTime);
+            const duration = formatTime(video.duration);
+            timeDisplay.textContent = `${currentTime} / ${duration}`;
+            document.getElementById('videoProgress').value = (video.currentTime / video.duration) * 100;
+        }
+
+function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            seconds = Math.floor(seconds % 60);
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+function startPlayback() {
+            if (!isPlaying && frames.length > 0) {
+                isPlaying = true;
+                playbackLoop();
+            }
+        }
+
+function pausePlayback() {
+            isPlaying = false;
+        }
+
+    async function playbackLoop() {
+    if (!isPlaying) return;
+
+    if (currentFrame >= frames.length) {
+        currentFrame = 0;
+    }
+
+    drawFrame(currentFrame);
+    updateChartMarker(currentFrame);
+    currentFrame++;
+
+    if (currentFrame < frames.length) {
+        setTimeout(() => requestAnimationFrame(playbackLoop), 1000/30); // 30fps playback
+    } else {
+        isPlaying = false;
+        document.getElementById('playPauseButton').textContent = 'Play';
+    }
+}
+
+function drawFrame(frameIndex) {
+    if (frameIndex >= frames.length) return;
+    
+    // Draw original frame
+    ctx.putImageData(frames[frameIndex], 0, 0);
+    
+    // Method 1: Add a semi-transparent dark overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Adjust the last value (0.5) for darkness level (0-1)
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw pose on top
+    if (poses[frameIndex] && poses[frameIndex].length > 0) {
+        drawPose(poses[frameIndex][0]);
+    }
+
+    // Update progress and time display
+    document.getElementById('videoProgress').value = (frameIndex / (frames.length - 1)) * 100;
+    const currentTime = formatTime(frameIndex / 30);
+    const duration = formatTime(frames.length / 30);
+    document.getElementById('timeDisplay').textContent = `${currentTime} / ${duration}`;
+    
+    // Update chart marker
+    updateChartMarker(frameIndex);
+}
+
+function drawPose(pose) {
+
+            const keypoints = pose.keypoints;
+            const confidenceThreshold = 0.3;
+
+            // Draw landmarks
+    keypoints.forEach(keypoint => {
+        if (keypoint.score > confidenceThreshold) {
+            ctx.beginPath();
+            ctx.arc(keypoint.x, keypoint.y, 6, 0, 2 * Math.PI); // Larger radius
+            ctx.fillStyle = '#ff0000'; // Bright red
+            ctx.fill();
+            ctx.strokeStyle = 'white'; // White outline
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    });
+
+            // Draw connections
+    const connections = poseDetection.util.getAdjacentPairs(poseDetection.SupportedModels.BlazePose);
+        connections.forEach(([i, j]) => {
+            const kp1 = keypoints[i];
+            const kp2 = keypoints[j];
+
+            if (kp1.score > confidenceThreshold && kp2.score > confidenceThreshold) {
+                ctx.beginPath();
+                ctx.moveTo(kp1.x, kp1.y);
+                ctx.lineTo(kp2.x, kp2.y);
+                ctx.strokeStyle = '#00ff00'; // Bright green for better visibility
+                ctx.lineWidth = 3; // Thicker lines
+                ctx.stroke();
+            }
+        });
+
+            // Draw angles based on checkbox states
+            if (document.getElementById('rightElbow').checked) {
+                drawAngleText(
+                    calculateAngle(keypoints[12], keypoints[14], keypoints[16]),
+                    keypoints[14],
+                    'R Elbow'
+                );
+            }
+            if (document.getElementById('leftElbow').checked) {
+                drawAngleText(
+                    calculateAngle(keypoints[11], keypoints[13], keypoints[15]),
+                    keypoints[13],
+                    'L Elbow'
+                );
+            }
+            if (document.getElementById('rightKnee').checked) {
+                drawAngleText(
+                    calculateAngle(keypoints[24], keypoints[26], keypoints[28]),
+                    keypoints[26],
+                    'R Knee'
+                );
+            }
+            if (document.getElementById('leftKnee').checked) {
+                drawAngleText(
+                    calculateAngle(keypoints[23], keypoints[25], keypoints[27]),
+                    keypoints[25],
+                    'L Knee'
+                );
+            }
+            if (document.getElementById('rightHip').checked) {
+                drawAngleText(
+                    calculateAngle(keypoints[12], keypoints[24], keypoints[26]),
+                    keypoints[24],
+                    'R Hip'
+                );
+            }
+            if (document.getElementById('leftHip').checked) {
+                drawAngleText(
+                    calculateAngle(keypoints[11], keypoints[23], keypoints[25]),
+                    keypoints[23],
+                    'L Hip'
+                );
+            }
+        }
+
+function drawAngleText(angle, centerPoint, label) {
+    if (angle === null || !centerPoint || centerPoint.score < 0.3) return;
+    
+    ctx.font = 'bold 16px Arial'; // Larger, bold font
+    ctx.fillStyle = 'white'; // White text
+    ctx.strokeStyle = 'black'; // Black outline
+    ctx.lineWidth = 3;
+    ctx.textAlign = 'center';
+    
+    // Draw text outline
+    ctx.strokeText(`${label}: ${angle}°`, centerPoint.x, centerPoint.y - 15);
+    // Draw text fill
+    ctx.fillText(`${label}: ${angle}°`, centerPoint.x, centerPoint.y - 15);
+        }
+
+
+        // Add this to your initialization section
+let upperBodyChart;
+
+// Replace the existing initializeCharts function with this one:
+function calculateGaussianSmoothing(data, sigma = 1.5) {  // Lower sigma for pose data
+    const windowSize = Math.ceil(sigma * 3);  // Reduced window size for better responsiveness
+    const result = [];
+    
+    // Pre-calculate Gaussian weights for efficiency
+    const weights = [];
+    for (let i = -windowSize; i <= windowSize; i++) {
+        weights[i + windowSize] = Math.exp(-(i * i) / (2 * sigma * sigma));
+    }
+    
+    for (let i = 0; i < data.length; i++) {
+        let sum = 0;
+        let weightSum = 0;
+        
+        for (let j = -windowSize; j <= windowSize; j++) {
+            if (i + j >= 0 && i + j < data.length && data[i + j] !== null && !isNaN(data[i + j])) {
+                const weight = weights[j + windowSize];
+                sum += data[i + j] * weight;
+                weightSum += weight;
+            }
+        }
+        result[i] = weightSum > 0 ? sum / weightSum : null;
+    }
+    return result;
+}
+
+
+function initializeCharts() {
+    // Clear existing charts
+    d3.select('#upperBodyChart').html('');
+
+    // Set the dimensions and margins of the graph
+    const margin = {top: 20, right: 150, bottom: 30, left: 50};  // Increased right margin for legend
+    const width = 800 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    // Prepare the data
+    const allAngles = angleData.map((data, index) => ({
+        frame: index,
+        'Right Elbow': data?.rightElbow || null,
+        'Left Elbow': data?.leftElbow || null,
+        'Right Knee': data?.rightKnee || null,
+        'Left Knee': data?.leftKnee || null,
+        'Right Hip': data?.rightHip || null,
+        'Left Hip': data?.leftHip || null
+    }));
+
+    const angleTypes = ['Right Elbow', 'Left Elbow', 'Right Knee', 'Left Knee', 'Right Hip', 'Left Hip'];
+    const colors = ['#ff0000', '#0000ff', '#00ff00', '#ff00ff', '#ffa500', '#00ffff'];
+
+    // Create SVG container
+    const svg = d3.select('#upperBodyChart')
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Create scales
+    const xScale = d3.scaleLinear()
+        .domain([0, allAngles.length - 1])
+        .range([0, width]);
+
+    const yScale = d3.scaleLinear()
+        .domain([0, 200])
+        .range([height, 0]);
+
+    // Create axes
+    const xAxis = d3.axisBottom(xScale)
+        .ticks(10)
+        .tickFormat(d => Math.round(d));
+
+    const yAxis = d3.axisLeft(yScale)
+        .ticks(10);
+
+    // Add axes
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(xAxis)
+        .append('text')
+        .attr('x', width / 2)
+        .attr('y', margin.bottom)
+        .attr('fill', 'black')
+        .style('text-anchor', 'middle')
+        .text('Frame');
+
+    svg.append('g')
+        .call(yAxis)
+        .append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('y', -margin.left + 15)
+        .attr('x', -height / 2)
+        .attr('fill', 'black')
+        .style('text-anchor', 'middle')
+        .text('Angle (degrees)');
+
+    // Create line generator with better null handling
+    const line = d3.line()
+        .defined(d => d.value !== null && !isNaN(d.value))
+        .x(d => xScale(d.frame))
+        .y(d => yScale(d.value));    
+    
+    // Store line visibility state
+    const lineVisibility = {};
+    angleTypes.forEach(type => lineVisibility[type] = true);
+
+    // Add lines with gap handling
+    angleTypes.forEach((type, i) => {
+    // Get raw values
+    const rawValues = allAngles.map(d => d[type]);
+    
+    // Apply Gaussian smoothing
+    const smoothedValues = calculateGaussianSmoothing(rawValues, 1.5);  // Adjust sigma as needed
+    
+    // Create value objects with frame numbers
+    const values = smoothedValues.map((value, frame) => ({
+        frame: frame,
+        value: value
+    }));
+
+        // Split data into segments where there are no null values
+        const segments = [];
+        let currentSegment = [];
+        
+        values.forEach(point => {
+            if (point.value !== null && !isNaN(point.value)) {
+                currentSegment.push(point);
+            } else if (currentSegment.length > 0) {
+                segments.push(currentSegment);
+                currentSegment = [];
+            }
+        });
+        if (currentSegment.length > 0) {
+            segments.push(currentSegment);
+        }
+
+        // Draw each segment
+        segments.forEach(segment => {
+            svg.append('path')
+                .datum(segment)
+                .attr('class', `line-${type.replace(/\s+/g, '-')}`)
+                .attr('fill', 'none')
+                .attr('stroke', colors[i])
+                .attr('stroke-width', 2)
+                .attr('d', line);
+        });
+    });
+
+    // Add vertical marker line
+    const markerLine = svg.append('line')
+        .attr('class', 'marker-line')
+        .attr('y1', 0)
+        .attr('y2', height)
+        .attr('stroke', 'black')
+        .attr('stroke-width', 1)
+        .attr('stroke-dasharray', '5,5')
+        .style('opacity', 0);
+
+    // Add legend with interactivity
+    const legend = svg.append('g')
+        .attr('font-family', 'sans-serif')
+        .attr('font-size', 10)
+        .attr('text-anchor', 'start')
+        .selectAll('g')
+        .data(angleTypes)
+        .enter().append('g')
+        .attr('transform', (d, i) => `translate(${width + 10},${i * 20})`)
+        .style('cursor', 'pointer')
+        .on('click', function(event, d) {
+            lineVisibility[d] = !lineVisibility[d];
+            const opacity = lineVisibility[d] ? 1 : 0.2;
+            d3.selectAll(`.line-${d.replace(/\s+/g, '-')}`).style('opacity', opacity);
+            d3.select(this).style('opacity', opacity);
+        });
+
+    legend.append('rect')
+        .attr('width', 19)
+        .attr('height', 19)
+        .attr('fill', (d, i) => colors[i]);
+
+    legend.append('text')
+        .attr('x', 24)
+        .attr('y', 9.5)
+        .attr('dy', '0.32em')
+        .text(d => d);
+
+    // Store the marker line reference globally
+    window.markerLine = markerLine;
+    window.xScale = xScale;
+}
+
+
+function updateChartMarker(frameIndex) {
+    if (window.markerLine && window.xScale) {
+        window.markerLine
+            .attr('x1', window.xScale(frameIndex))
+            .attr('x2', window.xScale(frameIndex))
+            .style('opacity', 1);
+    }
+}
+
+
+function updateChartEventMarkers() {
+            if (!window.markerLine || !window.xScale) return;
+
+            // Remove existing event markers
+            d3.selectAll('.event-marker').remove();
+
+            // Add event markers
+            const svg = d3.select('#upperBodyChart svg g');
+            const height = svg.node().getBBox().height;
+
+            eventMarkers.forEach(event => {
+                svg.append('line')
+                    .attr('class', 'event-marker')
+                    .attr('x1', window.xScale(event.frame))
+                    .attr('x2', window.xScale(event.frame))
+                    .attr('y1', 0)
+                    .attr('y2', height)
+                    .attr('stroke', '#ff6b6b')
+                    .attr('stroke-width', 2)
+                    .attr('stroke-dasharray', '4,4');
+
+                svg.append('text')
+                    .attr('class', 'event-marker')
+                    .attr('x', window.xScale(event.frame))
+                    .attr('y', -5)
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', '#ff6b6b')
+                    .text(event.tag);
+            });
+        }
+
+// Modify your drawFrame function to include chart updates:
+function drawFrame(frameIndex) {
+    if (frameIndex >= frames.length) return;
+    
+    // Draw original frame
+    ctx.putImageData(frames[frameIndex], 0, 0);
+    
+    // Add semi-transparent dark overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; // Adjust this value (0-1) to control darkness
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw pose on top
+    if (poses[frameIndex] && poses[frameIndex].length > 0) {
+        drawPose(poses[frameIndex][0]);
+    }
+
+    // Update progress
+    document.getElementById('videoProgress').value = (frameIndex / (frames.length - 1)) * 100;
+    
+    // Calculate time from frame index (assuming 30fps)
+    const currentTime = formatTime(frameIndex / 30);
+    const duration = formatTime(frames.length / 30);
+    document.getElementById('timeDisplay').textContent = `${currentTime} / ${duration}`;
+
+    // Update chart markers
+    updateChartMarker(frameIndex);
+} 
+   
+ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+   </script>
+</body>
+</html>
